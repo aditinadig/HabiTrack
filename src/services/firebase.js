@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: 'your-api-key',
-  authDomain: 'your-auth-domain',
-  projectId: 'your-project-id',
-  storageBucket: 'your-storage-bucket',
-  messagingSenderId: 'your-messaging-sender-id',
-  appId: 'your-app-id'
+  apiKey: 'AIzaSyDbz3t2treM6daM09N3L4Hew95afv4RHXY',
+  authDomain: 'habitrack-b16ae.firebaseapp.com',
+  projectId: 'habitrack-b16ae',
+  storageBucket: 'habitrack-b16ae.firebasestorage.app',
+  messagingSenderId: '89523096206',
+  appId: '1:89523096206:web:28986f25e0dc6f13d917df'
 };
 
 const app = initializeApp(firebaseConfig);
