@@ -16,7 +16,7 @@ const Signup = () => {
 
     try {
       await signUp(email, password, name); // Pass name along with email and password
-      window.location.href = "/dashboard";
+      window.location.href = "/all-habits";
     } catch (error) {
       setError(error.message);
     }

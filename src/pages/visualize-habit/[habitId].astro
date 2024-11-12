@@ -1,0 +1,6 @@
+---
+import HabitVsualizerComponent from "../habits/HabitVisualizer.jsx";
+const { habitId } = Astro.params;
+---
+
+<HabitVsualizerComponent habitId={habitId} client:only="react"/>

@@ -16,7 +16,7 @@ const Login = () => {
     try {
       await logIn(email, password);
       // Redirect to homepage or dashboard upon successful login
-      window.location.href = "/dashboard";
+      window.location.href = "/all-habits";
     } catch (error) {
       setError(error.message); // Display error message if login fails
     }

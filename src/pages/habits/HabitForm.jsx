@@ -153,7 +153,65 @@ const HabitForm = ({
             onChange={handleChange}
           />
 
-          <Typography
+          <FormControl fullWidth sx={{ mb: "var(--spacing-md)" }}>
+            <Typography
+              variant="body1"
+              sx={{
+                textAlign: "left",
+                fontWeight: 600,
+                mb: "var(--spacing-xs)",
+                mt: "var(--spacing-sm)",
+              }}
+            >
+              {" "}
+              Reward Type{" "}
+            </Typography>
+
+            <Select
+              name="rewardType"
+              value={habitData.rewardType}
+              onChange={handleChange}
+              sx={{
+                backgroundColor: "var(--color-primary-background)",
+                ".MuiSelect-select": {
+                  display: "flex",
+                  justifyContent: "left",
+                },
+                ".MuiMenuItem-root": {
+                  textAlign: "left",
+                },
+              }}
+              required
+            >
+              <MenuItem
+                value="Physical"
+                sx={{ display: "flex", justifyContent: "left" }}
+              >
+                Physical
+              </MenuItem>
+              <MenuItem
+                value="Mental"
+                sx={{ display: "flex", justifyContent: "left" }}
+              >
+                Mental
+              </MenuItem>
+              <MenuItem
+                value="Relaxation"
+                sx={{ display: "flex", justifyContent: "left" }}
+              >
+                Relaxation
+              </MenuItem>
+              <MenuItem
+                value="Social"
+                sx={{ display: "flex", justifyContent: "left" }}
+              >
+                Social
+              </MenuItem>
+            </Select>
+          </FormControl>
+
+          {habitData.rewardType ? <>
+            <Typography
             variant="body1"
             sx={{
               textAlign: "left",
@@ -177,6 +235,8 @@ const HabitForm = ({
             value={habitData.reward}
             onChange={handleChange}
           />
+          </> : null}
+          
 
           <FormControl fullWidth sx={{ mb: "var(--spacing-md)" }}>
             <Typography

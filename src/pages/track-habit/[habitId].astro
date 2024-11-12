@@ -1,0 +1,6 @@
+---
+import TrackingPageComponent from "../habits/TrackingPage.jsx";
+const { habitId } = Astro.params;
+---
+
+<TrackingPageComponent habitId={habitId} client:only="react"/>
