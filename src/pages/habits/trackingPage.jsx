@@ -4,7 +4,7 @@ import {
   Typography,
   Box,
   Paper,
-  Checkbox,
+  Button,
   Snackbar,
   Grid,
   MenuItem,
@@ -241,9 +241,14 @@ const TrackingPage = () => {
   return (
     <Box>
       <Header />
+      <Box sx={{ textAlign: "center" }}>
+        <Button variant="link" href="/all-habits" sx={{ mt: 4 }}>
+          Go Back
+        </Button>
+      </Box>
       <Typography
         variant="h3"
-        sx={{ mt: 8, textAlign: "center", fontWeight: 600 }}
+        sx={{ mt: 4, textAlign: "center", fontWeight: 600 }}
       >
         Tracking for Habit - {habit.habitName}
       </Typography>

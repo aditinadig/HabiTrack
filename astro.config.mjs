@@ -10,6 +10,13 @@ export default defineConfig({
     optimizeDeps: {
       include: ['dayjs'],
     },
+    css: {
+      preprocessorOptions: {
+        css: {
+          additionalData: `@import './src/styles/global.css';`,
+        },
+      },
+    },
   },
   output: 'static', // Set output to 'static' for a purely static build
 });

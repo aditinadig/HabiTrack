@@ -1,6 +1,6 @@
 // src/pages/habits/newHabitForm.jsx
 import React, { useState, useEffect } from "react";
-import { Box, Modal } from "@mui/material";
+import { Box, Modal, Button } from "@mui/material";
 import { addHabit } from "../../services/habitService";
 import { getCookie } from "../../services/authService"; // Import getCookie to retrieve user info
 import Header from "../header_footer/Header";
@@ -49,7 +49,7 @@ const NewHabitForm = () => {
     event.preventDefault();
     try {
       // Function to select 10 random alternatives
-      const getAlternatives = () => {        
+      const getAlternatives = () => {
         return BAD_HABIT_ALTERNATIVES[habitData.rewardType.toLowerCase()];
       };
 
@@ -81,22 +81,28 @@ const NewHabitForm = () => {
   return (
     <Box>
       <Header />
-      <HabitForm
-        title="Create a New Habit"
-        habitData={habitData}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-        buttonText="Add"
-      />
-      <Modal open={openReminderModal} onClose={handleCloseReminder}>
-        <Box sx={{ maxWidth: "500px", margin: "auto", mt: 4, p: 2 }}>
-          <ReminderForm
-            habitId={selectedHabitId}
-            userId={userId}
-            onClose={handleCloseReminder}
-          />
-        </Box>
-      </Modal>
+      <Box sx={{ textAlign: "center" }}>
+        <Button variant="link" href="/all-habits" sx={{ mt: 4 }}>
+          Go Back
+        </Button>
+        <HabitForm
+          title="Create a New Habit"
+          habitData={habitData}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          buttonText="Add"
+        />
+        <Modal open={openReminderModal} onClose={handleCloseReminder}>
+          <Box sx={{ maxWidth: "500px", margin: "auto", mt: 4, p: 2 }}>
+            <ReminderForm
+              habitId={selectedHabitId}
+              userId={userId}
+              onClose={handleCloseReminder}
+            />
+          </Box>
+        </Modal>
+      </Box>
+
       <Footer />
     </Box>
   );

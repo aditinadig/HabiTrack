@@ -202,6 +202,7 @@ const HabitVisualizer = () => {
     <Box>
       <Header />
       <Container sx={{ textAlign: "center", mt: 12, minHeight: "25rem" }}>
+        <Button variant="link" href="/all-habits" sx={{ mb: 4 }}>Go Back</Button >
         <Typography variant="h3" sx={{ fontWeight: 700, mb: 8 }}>
           Habit Visualizer
         </Typography>
