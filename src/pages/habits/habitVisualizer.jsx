@@ -50,39 +50,27 @@ const HabitLoop = ({ trigger, reaction, reward, habitType }) => (
   >
     <Box sx={{ textAlign: "center" }}>
       <Circle text={trigger} bgColor="#FFCC80" />
-      <Typography variant="h6" sx={{ mt: 1 }}>
-        Trigger
-      </Typography>
+      <Typography variant="h6" sx={{ mt: 1 }}>Trigger</Typography>
     </Box>
-    <Typography variant="h4" sx={{ mx: 2 }}>
-      →
-    </Typography>
+    <Typography variant="h4" sx={{ mx: 2 }}>→</Typography>
     <Box sx={{ textAlign: "center", mr: 2 }}>
       <Circle
         text={reaction}
         bgColor={habitType === "Good" ? "#C5E1A5" : "#FFBEBA"}
       />
-      <Typography variant="h6" sx={{ mt: 1 }}>
-        Reaction
-      </Typography>
+      <Typography variant="h6" sx={{ mt: 1 }}>Reaction</Typography>
     </Box>
-    <Typography variant="h4" sx={{ mx: 2 }}>
-      →
-    </Typography>
+    <Typography variant="h4" sx={{ mx: 2 }}>→</Typography>
     <Box sx={{ textAlign: "center" }}>
       <Circle text={reward} bgColor="#a390f9" />
-      <Typography variant="h6" sx={{ mt: 1 }}>
-        Reward
-      </Typography>
+      <Typography variant="h6" sx={{ mt: 1 }}>Reward</Typography>
     </Box>
   </Box>
 );
 
 // AlternativesList component
 const AlternativesList = ({ alternatives, handleAlternativeClick }) => (
-  <Box
-    sx={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 2 }}
-  >
+  <Box sx={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 2 }}>
     {alternatives.length > 0 ? (
       alternatives.map((alternative, index) => (
         <Paper
@@ -110,9 +98,7 @@ const AlternativesList = ({ alternatives, handleAlternativeClick }) => (
 );
 
 const SelectedAlternativesList = ({ selectedAlternatives }) => (
-  <Box
-    sx={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 2 }}
-  >
+  <Box sx={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 2 }}>
     {selectedAlternatives.length > 0 ? (
       selectedAlternatives.map((alternative, index) => (
         <Paper
@@ -136,13 +122,27 @@ const SelectedAlternativesList = ({ selectedAlternatives }) => (
   </Box>
 );
 
-const HabitVisualizer = ({ habitId }) => {
+const HabitVisualizer = () => {
   const [habit, setHabit] = useState(null);
   const [selectedAlternatives, setSelectedAlternatives] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [habitId, setHabitId] = useState(null);
+
+  useEffect(() => {
+    const id = localStorage.getItem("habitId");
+    if (id) {
+      setHabitId(id);
+    } else {
+      console.error("Habit ID not found");
+    }
+    return () => {
+      localStorage.removeItem("habitId");
+    };
+  }, []);
 
   useEffect(() => {
     const fetchHabit = async () => {
+      if (!habitId) return;
       try {
         const habitData = await getHabitById(habitId);
         if (habitData) {
@@ -156,7 +156,6 @@ const HabitVisualizer = ({ habitId }) => {
   }, [habitId]);
 
   const handleAlternativeClick = (alternative) => {
-    // Add to selected alternatives and remove from displayed alternatives
     setSelectedAlternatives((prevSelected) => [...prevSelected, alternative]);
     setHabit((prevHabit) => ({
       ...prevHabit,
@@ -168,46 +167,33 @@ const HabitVisualizer = ({ habitId }) => {
     if (!habit || selectedAlternatives.length === 0) return;
 
     try {
-        const { alternatives, ...habitWithoutAlternatives } = habit;
+      const { alternatives, ...habitWithoutAlternatives } = habit;
+      for (const [index, alternative] of selectedAlternatives.entries()) {
+        const uniqueId = `alternative-${index + 1}-${habit.id}-${Date.now()}`;
+        const newHabitData = {
+          ...habitWithoutAlternatives,
+          habitName: `Alternative for ${habit.habitName} (${index + 1})`,
+          created_at: new Date().toISOString(),
+          reaction: alternative,
+          habitType: "Good",
+          id: uniqueId,
+        };
+        await addHabit(newHabitData, uniqueId);
+      }
 
-        // Create new habits for each selected alternative with unique IDs
-        for (const [index, alternative] of selectedAlternatives.entries()) {
-            // Generate a unique ID for the new habit by appending a timestamp
-            const uniqueId = `alternative-${index + 1}-${habit.id}-${Date.now()}`;
+      const updatedAlternatives = alternatives.filter(
+        (alt) => !selectedAlternatives.includes(alt)
+      );
+      await updateHabit(habit.id, { alternatives: updatedAlternatives });
+      setHabit((prevHabit) => ({ ...prevHabit, alternatives: updatedAlternatives }));
 
-            const newHabitData = {
-                ...habitWithoutAlternatives,
-                habitName: `Alternative for ${habit.habitName} (${index + 1})`,
-                created_at: new Date().toISOString(),
-                reaction: alternative,
-                habitType: "Good",
-                id: uniqueId,  // Set both the document ID and the habit's `id` property to the same unique value
-            };
-
-            // Add new habit with the truly unique ID
-            await addHabit(newHabitData, uniqueId);
-        }
-
-        // Remove selected alternatives from the original alternatives array
-        const updatedAlternatives = alternatives.filter(
-            (alt) => !selectedAlternatives.includes(alt)
-        );
-
-        // Update the original habit document with the filtered alternatives array
-        await updateHabit(habit.id, { alternatives: updatedAlternatives });
-
-        // Update the local habit state to reflect the new alternatives
-        setHabit((prevHabit) => ({
-            ...prevHabit,
-            alternatives: updatedAlternatives,
-        }));
-
-        setShowConfirmation(true);
-        setSelectedAlternatives([]);
+      setShowConfirmation(true);
+      setSelectedAlternatives([]);
     } catch (error) {
-        console.error("Error creating alternative habits:", error);
+      console.error("Error creating alternative habits:", error);
     }
-};
+  };
+
   if (!habit) return <Typography>Loading...</Typography>;
 
   const { trigger, reaction, reward, alternatives, habitType } = habit;
@@ -244,9 +230,7 @@ const HabitVisualizer = ({ habitId }) => {
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 8, mb: 4 }}>
               Selected Alternatives
             </Typography>
-            <SelectedAlternativesList
-              selectedAlternatives={selectedAlternatives}
-            />
+            <SelectedAlternativesList selectedAlternatives={selectedAlternatives} />
             <Button
               variant="contained"
               color="primary"

@@ -273,6 +273,17 @@ const AllHabits = () => {
     }
   };
 
+  const handleVisualizeClick = (habitId) => {
+    localStorage.setItem('habitId', habitId); // Store habitId in localStorage
+    console.log('habitId', habitId);
+    window.location.href = '/visualize-habit'; // Navigate to visualize-habit page
+  };
+
+  const handleTrackClick = (habitId) => {
+    localStorage.setItem('habitId', habitId); // Store habitId in localStorage
+    window.location.href = '/track-habit'; // Navigate to visualize-habit page
+  };
+
   return (
     <Box sx={{ cursor: loading ? "wait" : "auto" }}>
       <Header />
@@ -423,14 +434,14 @@ const AllHabits = () => {
                     variant="outlined"
                     color="inherit"
                     sx={{ mr: 1 }}
-                    href={`/visualize-habit/${habit.id}`}
+                    onClick={() => handleVisualizeClick(habit.id)}
                   >
                     Visualize
                   </Button>
                   <Button
                     variant="contained"
                     color="warning"
-                    href={`/track-habit/${habit.id}`}
+                    onClick={() => handleTrackClick(habit.id)}
                   >
                     Track
                   </Button>

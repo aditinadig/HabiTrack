@@ -66,7 +66,7 @@ const WeeklyCompletionChart = ({ weeklyData }) => (
   </Box>
 );
 
-const TrackingPage = ({ habitId }) => {
+const TrackingPage = () => {
   const [habit, setHabit] = useState(null);
   const [monthEntries, setMonthEntries] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -86,36 +86,56 @@ const TrackingPage = ({ habitId }) => {
 
   const [weeklyData, setWeeklyData] = useState([]);
 
+  const [habitId, setHabitId] = useState(null);
+
   useEffect(() => {
-    const fetchData = async () => {
+    const id = localStorage.getItem("habitId");
+    if (id) {
+      setHabitId(id);
+    } else {
+      console.error("Habit ID not found");
+    }
+    return () => {
+      localStorage.removeItem("habitId");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!habitId) return;
+
+    const fetchHabitData = async () => {
       try {
         const habitData = await getHabitById(habitId);
         setHabit(habitData);
-
-        fetchMonthEntries(selectedMonth);
       } catch (error) {
-        console.error("Error fetching tracking data:", error);
+        console.error("Error fetching habit:", error);
       }
     };
 
-    fetchData();
+    fetchHabitData();
+  }, [habitId]);
+
+  useEffect(() => {
+    if (!habitId) return;
+
+    const fetchMonthEntries = async () => {
+      try {
+        const entries = await getEntriesByHabit(habitId);
+        const monthDays = getDaysOfMonth(selectedMonth);
+        const monthData = monthDays.map((day) => {
+          const entry = entries.find((e) => e.date === day.date);
+          return entry ? { ...day, completed: entry.completed } : day;
+        });
+
+        setMonthEntries(monthData);
+        setLongestStreak(calculateLongestStreak(monthData));
+      } catch (error) {
+        console.error("Error fetching month entries:", error);
+      }
+    };
+
+    fetchMonthEntries();
   }, [habitId, selectedMonth]);
-
-  const fetchMonthEntries = async (month) => {
-    try {
-      const entries = await getEntriesByHabit(habitId);
-      const monthDays = getDaysOfMonth(month);
-
-      const monthData = monthDays.map((day) => {
-        const entry = entries.find((e) => e.date === day.date);
-        return entry ? { ...day, completed: entry.completed } : day;
-      });
-      setMonthEntries(monthData);
-      setLongestStreak(calculateLongestStreak(monthData));
-    } catch (error) {
-      console.error("Error fetching month entries:", error);
-    }
-  };
 
   const getDaysOfMonth = (month) => {
     const startOfMonth = dayjs(`2024-${month + 1}-01`);
