@@ -1,15 +1,12 @@
 ---
-// src/pages/track-habit/[habitId].astro
 import TrackingPageComponent from "../habits/TrackingPage.jsx";
-import { fetchHabitsFromFirebase } from "../../utils/habits.js"; // Adjust the import path as necessary
+import { getAllHabitIds } from "../../services/habitService";
+const { habitId } = Astro.params;
 
 export async function getStaticPaths() {
-  // Replace with a function that fetches or generates all habit IDs
-  const habits = await fetchHabitsFromFirebase(); // Replace with your actual function
-  return habits.map(habit => ({ params: { habitId: habit.id } }));
+  const habitIds = await getAllHabitIds(); // Same as above, reuse the function for habit IDs
+  return habitIds.map((id) => ({ params: { habitId: id } }));
 }
-
-const { habitId } = Astro.params;
 ---
 
-<TrackingPageComponent habitId={habitId} client:only="react" />
+<TrackingPageComponent habitId={habitId} client:only="react"/>

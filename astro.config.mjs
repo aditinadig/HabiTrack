@@ -8,8 +8,8 @@ export default defineConfig({
       noExternal: ['@mui/material', '@emotion/react', '@emotion/styled', '@mui/icons-material'],
     },
     optimizeDeps: {
-      include: ['dayjs'], // Add this line to ensure dayjs is pre-bundled
+      include: ['dayjs'],
     },
   },
-  output: "static", // Enable server rendering for dynamic routes
+  output: 'static', // Set output to 'static' for a purely static build
 });
