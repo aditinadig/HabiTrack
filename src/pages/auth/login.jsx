@@ -90,7 +90,7 @@ const Login = () => {
           sx={{ color: "var(--color-text-light)", mt: "var(--spacing-md)" }}
         >
           Don’t have an account?{" "}
-          <a href="/auth/signup" style={{ color: "var(--color-primary)" }}>
+          <a href="/signup" style={{ color: "var(--color-primary)" }}>
             Sign up
           </a>
         </Typography>
