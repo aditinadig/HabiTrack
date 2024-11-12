@@ -11,5 +11,5 @@ export default defineConfig({
       include: ['dayjs'], // Add this line to ensure dayjs is pre-bundled
     },
   },
-  output: "server", // Enable server rendering for dynamic routes
+  output: "static", // Enable server rendering for dynamic routes
 });

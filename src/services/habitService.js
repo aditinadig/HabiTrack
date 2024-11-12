@@ -44,6 +44,11 @@ export const deleteHabit = async (habitId) => {
   await deleteDoc(habitRef);
 };
 
+export async function getAllHabitIds() {
+  const habits = await getHabitsByUser(); // Adjust this to match your service's structure
+  return habits.map((habit) => habit.id);
+}
+
 // Delete a habit and its related HabitEntries and Reminders
 // export const deleteHabit = async (habitId) => {
 //   try {

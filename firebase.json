@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "dist", // or "build" depending on your Astro output directory
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  },
+
+  "functions": {
+    "source": "functions"
+  }
+}

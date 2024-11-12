@@ -1,5 +1,11 @@
 ---
 import HabitVsualizerComponent from "../habits/HabitVisualizer.jsx";
+import { fetchHabitsFromFirebase } from "../../utils/habits.js"; // Adjust the import path as necessary
+export async function getStaticPaths() {
+  // Replace with a function that fetches or generates all habit IDs
+  const habits = await fetchHabitsFromFirebase(); // Replace with your actual function
+  return habits.map(habit => ({ params: { habitId: habit.id } }));
+}
 const { habitId } = Astro.params;
 ---
 
