@@ -1,16 +1,19 @@
 ---
-
+import Header from './header_footer/Header';
+import Footer from './header_footer/Footer';
+import Homepage from './homepage/Homepage.jsx';
+import '../styles/global.css';
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HabiTrack</title>
+  </head>
+  <body>
+    <Header client:only="react" />
+    <Homepage client:only="react" />
+    <Footer client:only="react" />
+  </body>
 </html>

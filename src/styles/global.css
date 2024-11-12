@@ -1,0 +1,92 @@
+/* global.css */
+@import url('https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Delius&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lexend+Deca:wght@100..900&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+:root {
+    /* Colors */
+    --color-primary: #3f51b5; /* Primary brand color */
+    --color-secondary: #ff9800; /* Secondary color */
+    --color-primary-background: #fff; /* Background color */
+    --color-secondary-background: #f0f1ff; /* Secondary background color */
+    --color-text: #333; /* Default text color */
+    --color-text-light: #666; /* Lighter text color */
+    --color-border: #ddd; /* Border color */
+    --color-button-bg: #ff9800; /* Button background color */
+    --color-button-hover-bg: #e68900; /* Button hover background color */
+  
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+  
+    /* Borders */
+    --border-radius: 8px;
+    --border-width: 1px;
+    --border-style: solid;
+  
+    /* Typography */
+    --font-family: "Lexend Deca", sans-serif;
+    --font-optical-sizing: auto;
+    --font-size-base: 16px;
+    --font-size-small: 14px;
+    --font-size-large: 20px;
+  }
+  /* Global Material UI overrides */
+.MuiTypography-root,
+.MuiButton-root,
+.MuiTextField-root,
+.MuiContainer-root,
+.MuiAppBar-root,
+.MuiPaper-root,
+.MuiBox-root,
+.MuiLink-root {
+    font-family: var(--font-family) !important;
+}
+
+
+  /* Global resets and body styling */
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+  
+  /* Global button styles */
+  button {
+    background-color: var(--color-button-bg);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: var(--color-button-hover-bg);
+  }
+  
+  /* Link styling */
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+
+  .MuiButton-root {
+    text-transform: none !important; /* Disable text-transform for all MUI buttons */
+    font-weight: 600 !important;
+  }
