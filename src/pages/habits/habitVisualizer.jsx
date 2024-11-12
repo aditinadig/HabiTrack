@@ -216,10 +216,10 @@ const HabitVisualizer = () => {
 
         {habitType === "Bad" && (
           <>
-            <Typography variant="h4" sx={{ fontWeight: 700, mt: 8, mb: 4 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mt: 8, }}>
               Alternatives to Try
             </Typography>
-            <Typography variant="body1" sx={{ fontWeight: 700, mt: 8, mb: 4 }}>
+            <Typography variant="body1" sx={{ mt: 2, mb: 4 }}>
               Choose from the options - a new good habit will be created for each
             </Typography>
             <AlternativesList
