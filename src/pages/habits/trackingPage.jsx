@@ -157,24 +157,38 @@ const TrackingPage = () => {
   };
 
   const calculateWeeklyData = useMemo(() => {
-    const weeks = Array(5)
-      .fill(0)
-      .map(() => ({ day: "", completion: 0 }));
+    if (!monthEntries.length) return [];
+
+    // Determine the total weeks in the selected month
+    const startOfMonth = dayjs(`2024-${selectedMonth + 1}-01`);
+    const endOfMonth = startOfMonth.endOf("month");
+    const totalWeeks = Math.ceil((endOfMonth.date() + startOfMonth.day()) / 7);
+
+    // Initialize the weeks array dynamically
+    const weeks = Array.from({ length: totalWeeks }, (_, i) => ({
+      day: `Week ${i + 1}`,
+      completion: 0,
+    }));
+
     let currentWeek = 0;
 
-    monthEntries.forEach((entry, index) => {
+    monthEntries.forEach((entry) => {
       const dayOfWeek = dayjs(entry.date).day();
-      if (index > 0 && dayOfWeek === 0) currentWeek++;
+      const weekIndex = Math.floor(
+        (dayjs(entry.date).date() + startOfMonth.day() - 1) / 7
+      );
 
-      if (!entry.isEmpty && entry.completed) weeks[currentWeek].completion += 1;
-      weeks[currentWeek].day = `Week ${currentWeek + 1}`;
+      if (weekIndex < weeks.length && !entry.isEmpty && entry.completed) {
+        weeks[weekIndex].completion += 1;
+      }
     });
 
+    // Cap the completion to a max of 7 (days in a week)
     return weeks.map((week) => ({
       ...week,
       completion: Math.min(week.completion, 7),
     }));
-  }, [monthEntries]);
+  }, [monthEntries, selectedMonth]);
 
   useEffect(() => {
     setWeeklyData(calculateWeeklyData);
