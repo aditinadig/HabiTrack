@@ -1,4 +1,7 @@
 ---
+import React from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import "../styles/global.css";
 ---
 
@@ -9,6 +12,8 @@ import "../styles/global.css";
     <title>HabiTrack</title>
   </head>
   <body>
+    <!-- Ensure ToastContainer is hydrated -->
+    <ToastContainer position="top-right" autoClose={5000} client:load  />
     <slot />
   </body>
 </html>

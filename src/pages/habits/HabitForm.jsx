@@ -23,21 +23,7 @@ const HabitForm = ({
   buttonText,
 }) => {
   return (
-    <Container
-      maxWidth="sm"
-      sx={{ textAlign: "center"}}
-    >
-      <Typography
-        variant="h4"
-        sx={{
-          color: "var(--color-primary)",
-          mb: "var(--spacing-md)",
-          mt: "var(--spacing-md)",
-          fontWeight: 700,
-        }}
-      >
-        {title}
-      </Typography>
+    <Container sx={{ textAlign: "center", }}>
       <Paper
         elevation={3}
         sx={{
@@ -46,6 +32,17 @@ const HabitForm = ({
           borderRadius: "var(--border-radius)",
         }}
       >
+        <Typography
+          variant="h4"
+          sx={{
+            color: "var(--color-primary)",
+            mb: "var(--spacing-md)",
+            mt: "var(--spacing-md)",
+            fontWeight: 700,
+          }}
+        >
+          {title}
+        </Typography>
         <form onSubmit={handleSubmit}>
           <Typography
             variant="body1"
@@ -210,33 +207,34 @@ const HabitForm = ({
             </Select>
           </FormControl>
 
-          {habitData.rewardType ? <>
-            <Typography
-            variant="body1"
-            sx={{
-              textAlign: "left",
-              fontWeight: 600,
-              mb: "var(--spacing-xs)",
-              mt: "var(--spacing-sm)",
-            }}
-          >
-            Reward
-          </Typography>
-          <TextField
-            label="Reward"
-            name="reward"
-            fullWidth
-            required
-            variant="outlined"
-            sx={{
-              mb: "var(--spacing-md)",
-              backgroundColor: "var(--color-primary-background)",
-            }}
-            value={habitData.reward}
-            onChange={handleChange}
-          />
-          </> : null}
-          
+          {habitData.rewardType ? (
+            <>
+              <Typography
+                variant="body1"
+                sx={{
+                  textAlign: "left",
+                  fontWeight: 600,
+                  mb: "var(--spacing-xs)",
+                  mt: "var(--spacing-sm)",
+                }}
+              >
+                Reward
+              </Typography>
+              <TextField
+                label="Reward"
+                name="reward"
+                fullWidth
+                required
+                variant="outlined"
+                sx={{
+                  mb: "var(--spacing-md)",
+                  backgroundColor: "var(--color-primary-background)",
+                }}
+                value={habitData.reward}
+                onChange={handleChange}
+              />
+            </>
+          ) : null}
 
           <FormControl fullWidth sx={{ mb: "var(--spacing-md)" }}>
             <Typography

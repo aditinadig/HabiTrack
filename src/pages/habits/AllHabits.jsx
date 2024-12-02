@@ -21,6 +21,7 @@ import HabitForm from "../habits/HabitForm";
 import Header from "../header_footer/Header";
 import Footer from "../header_footer/Footer";
 import ReminderForm from "../reminders/SetReminderForm";
+import AllReminders from "../reminders/AllReminders";
 import "../../styles/global.css";
 import { BAD_HABIT_ALTERNATIVES } from "../../services/habitData";
 import { getEntriesByHabit } from "../../services/habitEntriesService";
@@ -84,6 +85,7 @@ const AllHabits = () => {
   const [selectedHabitId, setSelectedHabitId] = useState(null);
   const [totalHabits, setTotalHabits] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [openAllReminders, setOpenAllReminders] = useState(false);
 
   useEffect(() => {
     const fetchHabits = async () => {
@@ -192,6 +194,16 @@ const AllHabits = () => {
     setSelectedHabitId(null);
   };
 
+  const handleOpenAllReminders = (habit) => {
+    setOpenAllReminders(true);
+    setSelectedHabitId(habit);
+  };
+
+  const handleCloseAllReminders = () => {
+    setOpenAllReminders(false);
+    setSelectedHabitId(null);
+  };
+
   const handleUpdateHabit = async (updatedHabit) => {
     try {
       const getAlternatives = () => {
@@ -265,9 +277,9 @@ const AllHabits = () => {
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
           <Box>
             <Box>
-              <Typography variant="h6" sx={{ mb: 1 }}>
+              {/* <Typography variant="h6" sx={{ mb: 1 }}>
                 Time Filters
-              </Typography>
+              </Typography> */}
               <Chip
                 label="Today"
                 onClick={() => handleTimeFilterChange("today")}
@@ -287,9 +299,9 @@ const AllHabits = () => {
               />
             </Box>
             <Box mt={2}>
-              <Typography variant="h6" sx={{ mb: 1 }}>
+              {/* <Typography variant="h6" sx={{ mb: 1 }}>
                 Type Filters
-              </Typography>
+              </Typography> */}
               <Chip
                 label="All"
                 onClick={() => handleTypeFilterChange("all")}
@@ -384,6 +396,7 @@ const AllHabits = () => {
 
                 <Box>
                   <Typography
+                    component="div" // Ensures this Typography renders as a <div> instead of <p>
                     variant="h6"
                     sx={{
                       fontWeight: 700,
@@ -394,6 +407,7 @@ const AllHabits = () => {
                     {habit.habitName}
                   </Typography>
                   <Typography
+                    component="div"
                     variant="body2"
                     sx={{
                       fontWeight: 600,
@@ -407,6 +421,7 @@ const AllHabits = () => {
 
                 <Box>
                   <Typography
+                    component="div"
                     variant="body2"
                     sx={{
                       fontWeight: 500,
@@ -422,6 +437,7 @@ const AllHabits = () => {
                     </span>
                   </Typography>
                   <Typography
+                    component="div"
                     variant="body2"
                     sx={{
                       fontWeight: 500,
@@ -433,6 +449,7 @@ const AllHabits = () => {
                     <span style={{ fontWeight: 700 }}>{habit.streak} days</span>
                   </Typography>
                   <Typography
+                    component="div"
                     variant="body2"
                     sx={{
                       fontWeight: 500,
@@ -446,6 +463,7 @@ const AllHabits = () => {
                     </span>
                   </Typography>
                   <Typography
+                    component="div"
                     variant="body2"
                     sx={{
                       fontWeight: 500,
@@ -472,7 +490,7 @@ const AllHabits = () => {
                       textAlign: "left",
                       "&:hover": { textDecoration: "underline" },
                     }}
-                    href="/all-reminders"
+                    onClick={() => handleOpenAllReminders(habit.id)}
                   >
                     View All Reminders
                   </Link>
@@ -528,12 +546,11 @@ const AllHabits = () => {
           <Box
             sx={{
               width: "100%",
-              maxWidth: "500px",
+              maxWidth: "700px",
               margin: "auto",
               mt: 2,
               mb: 2,
               p: 2,
-              backgroundColor: "white",
               borderRadius: "8px",
             }}
           >
@@ -551,13 +568,28 @@ const AllHabits = () => {
             />
           </Box>
         </Modal>
-        <Modal open={openReminderModal} onClose={handleCloseReminder}>
-          <Box sx={{ maxWidth: "500px", margin: "auto" }}>
+
+        <Modal
+          open={openReminderModal}
+          onClose={handleCloseReminder}
+          sx={{ overflowY: "scroll" }}
+        >
+          <Box sx={{ maxWidth: "500px", margin: "auto", mb: 2 }}>
             <ReminderForm
               habitId={selectedHabitId}
               userId={userId}
               onClose={handleCloseReminder}
             />
+          </Box>
+        </Modal>
+
+        <Modal
+          open={openAllReminders}
+          onClose={handleCloseAllReminders}
+          sx={{ overflowY: "scroll" }}
+        >
+          <Box sx={{ maxWidth: "1000px", margin: "auto", mb: 2, mt: 4 }}>
+            <AllReminders habitId={selectedHabitId} />
           </Box>
         </Modal>
       </Box>

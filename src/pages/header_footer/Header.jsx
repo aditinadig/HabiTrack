@@ -35,7 +35,7 @@ const Header = () => {
             <>
               <Button variant="link" color="inherit" onClick={() => (window.location.href = "/create-habit")}>Create New Habit</Button>
               <Button variant="link" color="inherit" onClick={() => (window.location.href = "/all-habits")}>All Habits</Button>
-              <Button variant="link" color="inherit" onClick={() => (window.location.href = "/set-reminder")}>Set Reminder</Button>
+              {/* <Button variant="link" color="inherit" onClick={() => (window.location.href = "/all-reminders")}>All Reminders</Button> */}
               <Button variant="link" color="inherit" onClick={() => (window.location.href = "/history")}>History & Analysis</Button>
               <Button variant="link" color="inherit" onClick={handleLogout}>Logout</Button>
             </>

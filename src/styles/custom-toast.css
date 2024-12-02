@@ -1,0 +1,16 @@
+.custom-toast {
+    animation: fadeIn 0.5s ease-out; /* Smooth fade-in animation */
+    padding: 1rem;
+  }
+  
+  /* Fade-in animation for a smooth appearance */
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

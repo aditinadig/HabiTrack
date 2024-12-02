@@ -50,3 +50,18 @@ export const deleteReminder = async (reminderId) => {
     throw error;
   }
 };
+
+export const getRemindersByHabit = async (habitId) => {
+  try {
+    const reminders = [];
+    const q = query(collection(db, 'Reminders'), where('habitId', '==', habitId));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      reminders.push({ id: doc.id, ...doc.data() });
+    });
+    return reminders;
+  } catch (error) {
+    console.error("Error fetching reminders:", error);
+    throw error;
+  }
+}

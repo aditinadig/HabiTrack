@@ -28,9 +28,21 @@ import {
 } from "recharts";
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 const milestones = [
-  { name: "First Habit Added", description: "Congrats on your first habit!" },
-  { name: "10 Days Streak", description: "Achieved a 10-day streak!" },
-  { name: "100 Days Completed", description: "Tracked 100 days in total!" },
+  {
+    name: "First Habit Added",
+    description: "Congrats on your first habit!",
+    check: (habits) => habits.length > 0,
+  },
+  {
+    name: "10 Days Streak",
+    description: "Achieved a 10-day streak!",
+    check: (_, longestStreak) => longestStreak >= 10,
+  },
+  {
+    name: "100 Days Completed",
+    description: "Tracked 100 days in total!",
+    check: (_, __, totalCompletedDays) => totalCompletedDays >= 100,
+  },
 ];
 import { FaCheckCircle, FaFire, FaChartLine, FaTrophy } from "react-icons/fa";
 
@@ -46,6 +58,7 @@ const HistoryAndAnalysis = () => {
   const [streakData, setStreakData] = useState([]);
   const [categoryDistribution, setCategoryDistribution] = useState([]);
   const [inactiveHabits, setInactiveHabits] = useState([]);
+  const [totalCompletedDays, setTotalCompletedDays] = useState(0);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -69,12 +82,8 @@ const HistoryAndAnalysis = () => {
         const habits = await getHabitsByUser(userId);
         setHabits(habits);
 
-        const goodHabits = habits.filter(
-          (h) => h.habitType === "Good"
-        ).length;
-        const badHabits = habits.filter(
-          (h) => h.habitType === "Bad"
-        ).length;
+        const goodHabits = habits.filter((h) => h.habitType === "Good").length;
+        const badHabits = habits.filter((h) => h.habitType === "Bad").length;
 
         setCategoryDistribution([
           { name: "Good Habits", value: goodHabits },
@@ -151,7 +160,7 @@ const HistoryAndAnalysis = () => {
         );
         setLongestStreak(maxStreak);
         setMostActiveHabit(activeHabit);
-
+        setTotalCompletedDays(totalCompletedDays);
         // Format data for charts
         setMonthlyData(
           Object.entries(monthly).map(([month, count]) => ({
@@ -222,7 +231,7 @@ const HistoryAndAnalysis = () => {
     <Container sx={{ mt: 2, mb: 8 }}>
       <Box sx={{ textAlign: "center" }}>
         <Button variant="link" href="/all-habits" sx={{ mt: 4 }}>
-          Go Back to Dashboard
+          Go Back to Habits
         </Button>
       </Box>
       <Grid container spacing={4} sx={{ mt: 2 }}>
@@ -438,39 +447,58 @@ const HistoryAndAnalysis = () => {
         </Grid>
 
         {/* Habit Milestones */}
+        {/* Habit Milestones */}
         <Grid item xs={12}>
           <Paper elevation={3} sx={{ p: 4 }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
               Milestone Tracker
             </Typography>
             <Grid container spacing={2}>
-              {milestones.map((milestone) => (
-                <Grid item xs={12} md={4} key={milestone.name}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexDirection: "column",
-                      textAlign: "center",
-                      backgroundColor: "#F3E5F5",
-                      borderRadius: "var(--border-radius)",
-                      p: 3,
-                    }}
-                  >
-                    <FaTrophy size={40} color="#FFD700" />
-                    <Typography variant="h6" sx={{ fontWeight: 600, mt: 2 }}>
-                      {milestone.name}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
+              {milestones.map((milestone) => {
+                const achieved = milestone.check(
+                  habits,
+                  longestStreak,
+                  totalCompletedDays
+                );
+
+                return (
+                  <Grid item xs={12} md={4} key={milestone.name}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        textAlign: "center",
+                        backgroundColor: achieved ? "#E8F5E9" : "#FFEBEE",
+                        borderRadius: "var(--border-radius)",
+                        p: 3,
+                      }}
                     >
-                      {milestone.description}
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))}
+                      <FaTrophy
+                        size={40}
+                        color={achieved ? "#FFD700" : "#BDBDBD"}
+                      />
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          mt: 2,
+                          color: achieved ? "#2E7D32" : "#9E9E9E",
+                        }}
+                      >
+                        {milestone.name}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: achieved ? "text.secondary" : "#BDBDBD" }}
+                      >
+                        {milestone.description}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                );
+              })}
             </Grid>
           </Paper>
         </Grid>
