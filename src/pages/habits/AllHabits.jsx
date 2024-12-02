@@ -1,4 +1,3 @@
-// src/pages/habits/AllHabits.jsx
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -22,33 +21,27 @@ import HabitForm from "../habits/HabitForm";
 import Header from "../header_footer/Header";
 import Footer from "../header_footer/Footer";
 import ReminderForm from "../reminders/SetReminderForm";
-import "../../styles/global.css"; // Import global styles
-import { BAD_HABIT_ALTERNATIVES } from "../../services/habitData"; // Import suggestions and alternatives
-import {
-  getEntriesByHabit, // Import the function to fetch entries
-} from "../../services/habitEntriesService";
+import "../../styles/global.css";
+import { BAD_HABIT_ALTERNATIVES } from "../../services/habitData";
+import { getEntriesByHabit } from "../../services/habitEntriesService";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 
-// Extend dayjs with the isBetween plugin
 dayjs.extend(isBetween);
 
-// Helper function to get cookie value by name
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(";").shift();
 };
 
-// Calculate days accomplished/avoided and streak for each habit
 const calculateHabitStats = (entries) => {
   const completedEntries = entries
     .filter((entry) => entry.completed)
-    .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort entries by date
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   const daysAccomplished = completedEntries.length;
 
-  // Calculate the streak for the latest month
   const currentMonth = dayjs().month();
   const currentMonthEntries = completedEntries.filter(
     (entry) => dayjs(entry.date).month() === currentMonth
@@ -63,20 +56,16 @@ const calculateHabitStats = (entries) => {
       const currentDate = dayjs(currentMonthEntries[i].date);
 
       if (currentDate.diff(previousDate, "day") === 1) {
-        // Consecutive day
         currentStreak++;
       } else {
-        // Reset streak if not consecutive
         longestStreak = Math.max(longestStreak, currentStreak);
         currentStreak = 1;
       }
     } else {
-      // Initialize the first day of the streak
       currentStreak = 1;
     }
   }
 
-  // Update longest streak if the last streak was the longest
   longestStreak = Math.max(longestStreak, currentStreak);
 
   return { daysAccomplished, streak: longestStreak };
@@ -86,14 +75,15 @@ const AllHabits = () => {
   const [userId, setUserId] = useState("");
   const [habits, setHabits] = useState([]);
   const [filteredHabits, setFilteredHabits] = useState([]);
-  const [filter, setFilter] = useState("All");
-  const [sortOption, setSortOption] = useState("created_at"); // State to track sort option
-  const [editHabit, setEditHabit] = useState(null); // Track habit to edit
-  const [openModal, setOpenModal] = useState(false); // Control modal state
+  const [timeFilter, setTimeFilter] = useState("allTime");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [sortOption, setSortOption] = useState("created_at");
+  const [editHabit, setEditHabit] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
   const [openReminderModal, setOpenReminderModal] = useState(false);
   const [selectedHabitId, setSelectedHabitId] = useState(null);
   const [totalHabits, setTotalHabits] = useState(0);
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHabits = async () => {
@@ -108,7 +98,6 @@ const AllHabits = () => {
 
         const fetchedHabits = await getHabitsByUser(userId);
 
-        // Fetch habit entries and calculate stats
         const habitsWithStats = await Promise.all(
           fetchedHabits.map(async (habit) => {
             const entries = await getEntriesByHabit(habit.id);
@@ -130,68 +119,57 @@ const AllHabits = () => {
     fetchHabits();
   }, []);
 
-  // Sorting by created_at
-  const sortByCreatedAt = () => {
-    const sortedHabits = [...filteredHabits].sort((a, b) =>
-      dayjs(a.created_at).isBefore(dayjs(b.created_at)) ? -1 : 1
-    );
-    setFilteredHabits(sortedHabits);
-  };
-
-  // Sorting by last_updated
-  const sortByLastUpdated = () => {
-    const sortedHabits = [...filteredHabits].sort((a, b) =>
-      dayjs(a.last_updated).isBefore(dayjs(b.last_updated)) ? -1 : 1
-    );
-    setFilteredHabits(sortedHabits);
-  };
-
-  // Sorting functionality based on sortOption
   useEffect(() => {
-    let sortedHabits = [...habits];
-    if (sortOption === "created_at") {
+    applyFilters();
+  }, [timeFilter, typeFilter, habits]);
+
+  const applyFilters = () => {
+    let filtered = [...habits];
+
+    const today = dayjs().startOf("day");
+    const startOfWeek = dayjs().startOf("week");
+
+    if (timeFilter === "today") {
+      filtered = filtered.filter((habit) =>
+        dayjs(habit.created_at).isSame(today, "day")
+      );
+    } else if (timeFilter === "thisWeek") {
+      filtered = filtered.filter((habit) =>
+        dayjs(habit.created_at).isBetween(startOfWeek, today, "day", "[]")
+      );
+    }
+
+    if (typeFilter === "good") {
+      filtered = filtered.filter((habit) => habit.habitType === "Good");
+    } else if (typeFilter === "bad") {
+      filtered = filtered.filter((habit) => habit.habitType === "Bad");
+    }
+
+    setFilteredHabits(filtered);
+    setTotalHabits(filtered.length);
+  };
+
+  const handleTimeFilterChange = (time) => {
+    setTimeFilter(time);
+  };
+
+  const handleTypeFilterChange = (type) => {
+    setTypeFilter(type);
+  };
+
+  const handleSortChange = (option) => {
+    setSortOption(option);
+    let sortedHabits = [...filteredHabits];
+    if (option === "created_at") {
       sortedHabits.sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
-    } else if (sortOption === "last_updated") {
+    } else if (option === "last_updated") {
       sortedHabits.sort(
         (a, b) => new Date(b.last_updated) - new Date(a.last_updated)
       );
     }
     setFilteredHabits(sortedHabits);
-  }, [sortOption, habits]);
-
-  const handleFilterChange = (type) => {
-    setFilter(type);
-
-    const today = dayjs().startOf("day");
-    const startOfWeek = dayjs().startOf("week");
-
-    let filteredHabits;
-
-    if (type === "Today") {
-      filteredHabits = habits.filter((habit) =>
-        dayjs(habit.created_at).isSame(today, "day")
-      );
-    } else if (type === "This Week") {
-      filteredHabits = habits.filter((habit) =>
-        dayjs(habit.created_at).isBetween(startOfWeek, today, "day", "[]")
-      );
-    } else if (type === "All Time") {
-      filteredHabits = habits; // No filtering for all time
-    } else if (type === "All") {
-      filteredHabits = habits; // Reset to show all habits
-    } else {
-      // If it's "Good" or "Bad" filter
-      filteredHabits = habits.filter((habit) => habit.habitType === type);
-    }
-
-    setFilteredHabits(filteredHabits);
-    setTotalHabits(filteredHabits.length); // Update total habits based on filter
-  };
-
-  const handleSortChange = (option) => {
-    setSortOption(option);
   };
 
   const handleEditClick = (habit) => {
@@ -260,12 +238,9 @@ const AllHabits = () => {
     if (confirmed) {
       try {
         await deleteHabit(habitId);
-        // Update the habits list and the filtered habits list immediately
         const updatedHabits = habits.filter((habit) => habit.id !== habitId);
         setHabits(updatedHabits);
         setFilteredHabits(updatedHabits);
-
-        // Update the total habits count
         setTotalHabits(updatedHabits.length);
       } catch (error) {
         console.error("Error deleting habit:", error);
@@ -274,14 +249,13 @@ const AllHabits = () => {
   };
 
   const handleVisualizeClick = (habitId) => {
-    localStorage.setItem('habitId', habitId); // Store habitId in localStorage
-    console.log('habitId', habitId);
-    window.location.href = '/visualize-habit'; // Navigate to visualize-habit page
+    localStorage.setItem("habitId", habitId);
+    window.location.href = "/visualize-habit";
   };
 
   const handleTrackClick = (habitId) => {
-    localStorage.setItem('habitId', habitId); // Store habitId in localStorage
-    window.location.href = '/track-habit'; // Navigate to visualize-habit page
+    localStorage.setItem("habitId", habitId);
+    window.location.href = "/track-habit";
   };
 
   return (
@@ -291,41 +265,47 @@ const AllHabits = () => {
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
           <Box>
             <Box>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Time Filters
+              </Typography>
               <Chip
                 label="Today"
-                onClick={() => handleFilterChange("Today")}
-                color={filter === "Today" ? "primary" : "default"}
+                onClick={() => handleTimeFilterChange("today")}
+                color={timeFilter === "today" ? "primary" : "default"}
                 sx={{ mr: 1 }}
               />
               <Chip
                 label="This Week"
-                onClick={() => handleFilterChange("This Week")}
-                color={filter === "This Week" ? "success" : "default"}
+                onClick={() => handleTimeFilterChange("thisWeek")}
+                color={timeFilter === "thisWeek" ? "primary" : "default"}
                 sx={{ mr: 1 }}
               />
               <Chip
                 label="All Time"
-                onClick={() => handleFilterChange("All Time")}
-                color={filter === "All Time" ? "error" : "default"}
+                onClick={() => handleTimeFilterChange("allTime")}
+                color={timeFilter === "allTime" ? "primary" : "default"}
               />
             </Box>
             <Box mt={2}>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Type Filters
+              </Typography>
               <Chip
                 label="All"
-                onClick={() => handleFilterChange("All")}
-                color={filter === "All" ? "primary" : "default"}
+                onClick={() => handleTypeFilterChange("all")}
+                color={typeFilter === "all" ? "primary" : "default"}
                 sx={{ mr: 1 }}
               />
               <Chip
                 label="Good"
-                onClick={() => handleFilterChange("Good")}
-                color={filter === "Good" ? "success" : "default"}
+                onClick={() => handleTypeFilterChange("good")}
+                color={typeFilter === "good" ? "success" : "default"}
                 sx={{ mr: 1 }}
               />
               <Chip
                 label="Bad"
-                onClick={() => handleFilterChange("Bad")}
-                color={filter === "Bad" ? "error" : "default"}
+                onClick={() => handleTypeFilterChange("bad")}
+                color={typeFilter === "bad" ? "error" : "default"}
               />
             </Box>
           </Box>
@@ -341,99 +321,187 @@ const AllHabits = () => {
         </Box>
 
         <Box sx={{ display: "flex", mb: 2 }}>
-          <Button variant="outlined" sx={{ mr: 1 }} onClick={sortByCreatedAt}>
+          <Button
+            variant="outlined"
+            sx={{ mr: 1 }}
+            onClick={() => handleSortChange("created_at")}
+          >
             Sort by Last Created
           </Button>
-          <Button variant="outlined" onClick={sortByLastUpdated}>
+          <Button
+            variant="outlined"
+            onClick={() => handleSortChange("last_updated")}
+          >
             Sort by Last Modified
           </Button>
         </Box>
 
         <Typography variant="h4" sx={{ fontWeight: 600, mt: 4 }}>
-          {" "}
-          Total Habits: {totalHabits}{" "}
+          Total Habits: {totalHabits}
         </Typography>
 
-        <Grid container spacing={2} mt={2}>
+        <Grid container spacing={3} mt={3}>
           {filteredHabits.map((habit) => (
             <Grid item xs={12} md={4} key={habit.id}>
               <Paper
-                elevation={3}
+                elevation={4}
                 sx={{
-                  p: 2,
-                  backgroundColor: "var(--color-secondary-background)",
-                  borderRadius: "var(--border-radius)",
+                  p: 3,
+                  backgroundColor:
+                    habit.habitType === "Good" ? "#E8F5E9" : "#FFEBEE",
+                  borderRadius: "12px",
                   position: "relative",
-                  height: "16rem",
+                  height: "20rem",
+                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
                 }}
               >
-                <Box sx={{ position: "absolute", top: "18px", right: "4px" }}>
+                <Box sx={{ position: "absolute", top: "25px", right: "25px" }}>
                   <IconButton
                     size="small"
                     onClick={() => handleEditClick(habit)}
+                    sx={{
+                      backgroundColor: "rgba(63, 81, 181, 0.1)",
+                      "&:hover": { backgroundColor: "rgba(63, 81, 181, 0.2)" },
+                    }}
                   >
-                    <FaEdit
-                      style={{
-                        color: "var(--color-primary)",
-                        cursor: "pointer",
-                      }}
-                    />
+                    <FaEdit style={{ color: "var(--color-primary)" }} />
                   </IconButton>
                   <IconButton
                     size="small"
                     onClick={() => handleDeleteClick(habit.id)}
+                    sx={{
+                      backgroundColor: "rgba(255, 0, 0, 0.1)",
+                      "&:hover": { backgroundColor: "rgba(255, 0, 0, 0.2)" },
+                      ml: 1,
+                    }}
                   >
-                    <FaTrash
-                      style={{
-                        color: "grey",
-                        cursor: "pointer",
-                      }}
-                    />
+                    <FaTrash style={{ color: "grey" }} />
                   </IconButton>
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                  {habit.habitName}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 600,
-                    color: habit.habitType === "Good" ? "green" : "maroon",
-                    mb: 1,
-                  }}
-                >
-                  {habit.habitType} Habit
-                </Typography>
-                <Typography variant="body2" sx={{ color: "var(--color-text)" }}>
-                  {habit.habitType === "Bad"
-                    ? "Days Avoided:"
-                    : "Days Accomplished:"}{" "}
-                  {habit.daysAccomplished || 0}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "var(--color-text)" }}>
-                  Streak: {habit.streak} days
-                </Typography>
-                <Link sx={{ display: "block" }} href="/all-reminders">
+
+                <Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: habit.habitType === "Good" ? "#2E7D32" : "#C62828",
+                      mb: 0,
+                    }}
+                  >
+                    {habit.habitName}
+                  </Typography>
                   <Typography
                     variant="body2"
-                    sx={{ color: "var(--color-text)", cursor: "pointer" }}
+                    sx={{
+                      fontWeight: 600,
+                      color: habit.habitType === "Good" ? "#388E3C" : "#D32F2F",
+                      mb: 2,
+                    }}
+                  >
+                    {habit.habitType} Habit
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      color: "var(--color-text)",
+                      textAlign: "left",
+                    }}
+                  >
+                    {habit.habitType === "Bad"
+                      ? "Days Avoided:"
+                      : "Days Accomplished:"}{" "}
+                    <span style={{ fontWeight: 700 }}>
+                      {habit.daysAccomplished || 0}
+                    </span>
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      color: "var(--color-text)",
+                      textAlign: "left",
+                    }}
+                  >
+                    Streak:{" "}
+                    <span style={{ fontWeight: 700 }}>{habit.streak} days</span>
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      color: "var(--color-text)",
+                      textAlign: "left",
+                    }}
+                  >
+                    Created On:{" "}
+                    <span style={{ fontWeight: 700 }}>
+                      {dayjs(habit.created_at).format("MM-DD-YYYY")}
+                    </span>
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      color: "var(--color-text)",
+                      textAlign: "left",
+                    }}
+                  >
+                    Updated On:{" "}
+                    <span style={{ fontWeight: 700 }}>
+                      {dayjs(habit.updated_on).format("MM-DD-YYYY")}
+                    </span>
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Link
+                    sx={{
+                      display: "block",
+                      color: "var(--color-primary)",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                      mb: 1,
+                      mt: 1,
+                      textAlign: "left",
+                      "&:hover": { textDecoration: "underline" },
+                    }}
+                    href="/all-reminders"
                   >
                     View All Reminders
-                  </Typography>
-                </Link>
-                <Link onClick={() => handleOpenReminder(habit.id)}>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "var(--color-text)", cursor: "pointer" }}
+                  </Link>
+                  <Link
+                    sx={{
+                      display: "block",
+                      color: "var(--color-primary)",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                      textAlign: "left",
+                      "&:hover": { textDecoration: "underline" },
+                    }}
+                    onClick={() => handleOpenReminder(habit.id)}
                   >
                     Add a Reminder
-                  </Typography>
-                </Link>
-                <Box sx={{ display: "flex", mt: 2 }}>
+                  </Link>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mt: 3,
+                  }}
+                >
                   <Button
                     variant="outlined"
-                    color="inherit"
-                    sx={{ mr: 1 }}
+                    color="primary"
+                    sx={{ width: "48%", fontWeight: 600 }}
                     onClick={() => handleVisualizeClick(habit.id)}
                   >
                     Visualize
@@ -441,6 +509,7 @@ const AllHabits = () => {
                   <Button
                     variant="contained"
                     color="warning"
+                    sx={{ width: "48%", fontWeight: 600 }}
                     onClick={() => handleTrackClick(habit.id)}
                   >
                     Track
@@ -451,7 +520,6 @@ const AllHabits = () => {
           ))}
         </Grid>
 
-        {/* Edit Habit Modal */}
         <Modal
           open={openModal}
           onClose={handleModalClose}

@@ -1,0 +1,12 @@
+---
+import Header from './header_footer/Header';
+import Footer from './header_footer/Footer';
+import HistoryAndAnalysisComponent from './history/HistoryAndAnalysis.jsx';
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+    <Header client:only="react" />
+    <HistoryAndAnalysisComponent client:only="react" />
+    <Footer client:only="react" />
+</BaseLayout>

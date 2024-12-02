@@ -25,14 +25,14 @@ const HabitForm = ({
   return (
     <Container
       maxWidth="sm"
-      sx={{ textAlign: "center", mt: "var(--spacing-xl)" }}
+      sx={{ textAlign: "center"}}
     >
       <Typography
         variant="h4"
         sx={{
           color: "var(--color-primary)",
           mb: "var(--spacing-md)",
-          mt: "var(--spacing-lg)",
+          mt: "var(--spacing-md)",
           fontWeight: 700,
         }}
       >
