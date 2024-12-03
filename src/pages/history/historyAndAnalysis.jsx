@@ -59,6 +59,7 @@ const HistoryAndAnalysis = () => {
   const [categoryDistribution, setCategoryDistribution] = useState([]);
   const [inactiveHabits, setInactiveHabits] = useState([]);
   const [totalCompletedDays, setTotalCompletedDays] = useState(0);
+  const [goodVsBadData, setGoodVsBadData] = useState([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -150,6 +151,27 @@ const HistoryAndAnalysis = () => {
 
           // Prepare streak data
           streaks.push({ name: habit.habitName, streak });
+
+          let goodHabitCompletion = 0;
+          let badHabitCompletion = 0;
+
+          for (const habit of habits) {
+            const entries = await getEntriesByHabit(habit.id); // Fetch all entries for this habit
+            const completedDays = entries.filter(
+              (entry) => entry.completed
+            ).length; // Count completed days
+
+            if (habit.habitType === "Good") {
+              goodHabitCompletion += completedDays;
+            } else if (habit.habitType === "Bad") {
+              badHabitCompletion += completedDays;
+            }
+          }
+
+          setGoodVsBadData([
+            { name: "Good Habits", completion: goodHabitCompletion },
+            { name: "Bad Habits", completion: badHabitCompletion },
+          ]);
         }
 
         // Set computed analytics
@@ -164,13 +186,13 @@ const HistoryAndAnalysis = () => {
         // Format data for charts
         setMonthlyData(
           Object.entries(monthly).map(([month, count]) => ({
-            name: month,
+            name: month.substring(0, 3) + ' ' + month.slice(-4), // Abbreviate month name and get last 4 characters
             completion: count,
           }))
         );
         setWeeklyData(
           Object.entries(weekly).map(([week, count]) => ({
-            name: `Week ${week}`,
+            name: `W ${week}`,
             completion: count,
           }))
         );
@@ -242,7 +264,7 @@ const HistoryAndAnalysis = () => {
             sx={{
               p: 4,
               borderRadius: "var(--border-radius)",
-              backgroundColor: "var(--color-secondary-background)",
+              backgroundColor: "var(--color-primary)",
             }}
           >
             <Typography
@@ -251,7 +273,7 @@ const HistoryAndAnalysis = () => {
                 fontWeight: 600,
                 mb: 3,
                 textAlign: "center",
-                color: "var(--color-primary)",
+                color: "var(--color-primary-background)",
               }}
             >
               Overview Summary
@@ -410,8 +432,26 @@ const HistoryAndAnalysis = () => {
           </Paper>
         </Grid>
 
+        {/* Good vs. Bad Habit Consistency */}
+        <Grid item xs={12} md={4}>
+          <Paper elevation={3} sx={{ p: 4 }}>
+            <Typography variant="h5" sx={{ mb: 2 }}>
+              Consistency Tracker
+            </Typography>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={goodVsBadData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="completion" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
+
         {/* Monthly Performance */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <Paper elevation={3} sx={{ p: 4 }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
               Monthly Performance
@@ -429,7 +469,7 @@ const HistoryAndAnalysis = () => {
         </Grid>
 
         {/* Weekly Trends */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <Paper elevation={3} sx={{ p: 4 }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
               Weekly Trends
@@ -447,9 +487,8 @@ const HistoryAndAnalysis = () => {
         </Grid>
 
         {/* Habit Milestones */}
-        {/* Habit Milestones */}
         <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 4 }}>
+          <Paper elevation={3} sx={{ p: 4, }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
               Milestone Tracker
             </Typography>
