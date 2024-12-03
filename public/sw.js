@@ -121,8 +121,27 @@ self.addEventListener("activate", async (event) => {
     if (delay > 0) {
       const timeoutId = setTimeout(() => {
         self.registration.showNotification("Habit Reminder", {
-          body: `It's time for your reminder: ${reminderId}`,
+          body:
+            habitData.habitType === "Good"
+              ? `✨ Keep it up! ✨\nYou're doing great with your habit: ${habitData.habitName}`
+              : `⚠️ Avoid this habit: ${
+                  habitData.habitName
+                }\n💡 Try this instead: ${
+                  habitData.alternatives
+                    ? habitData.alternatives[
+                        Math.floor(
+                          Math.random() * habitData.alternatives.length
+                        )
+                      ]
+                    : "Stay positive and focus on healthy activities!"
+                }`,
+          icon: "/habit-icon.png",
+          badge:
+            habitData.habitType === "Good"
+              ? "/badge-good.png"
+              : "/badge-bad.png",
         });
+
         removeFromDB(reminderId); // Remove from DB once triggered
       }, delay);
 
@@ -138,7 +157,7 @@ self.addEventListener("activate", async (event) => {
 });
 
 self.addEventListener("message", async (event) => {
-  const { type } = event.data;
+  const { type, habitData } = event.data;
 
   if (type === "SCHEDULE_NOTIFICATION") {
     const reminderData = event.data.reminderData;
@@ -155,7 +174,9 @@ self.addEventListener("message", async (event) => {
 
     // Remove existing reminder before scheduling the updated one
     if (timeoutMap.has(reminderId)) {
-      console.log(`Removing existing notification for reminderId: ${reminderId}`);
+      console.log(
+        `Removing existing notification for reminderId: ${reminderId}`
+      );
       await removeFromDB(reminderId); // Remove old data from DB
     }
 
@@ -165,7 +186,25 @@ self.addEventListener("message", async (event) => {
     if (delay > 0) {
       const timeoutId = setTimeout(() => {
         self.registration.showNotification("Habit Reminder", {
-          body: `It's time for your reminder: ${reminderId}`,
+          body:
+            habitData.habitType === "Good"
+              ? `✨ Keep it up! ✨\nYou're doing great with your habit: ${habitData.habitName}`
+              : `⚠️ Avoid this habit: ${
+                  habitData.habitName
+                }\n💡 Try this instead: ${
+                  habitData.alternatives
+                    ? habitData.alternatives[
+                        Math.floor(
+                          Math.random() * habitData.alternatives.length
+                        )
+                      ]
+                    : "Stay positive and focus on healthy activities!"
+                }`,
+          icon: "/habit-icon.png",
+          badge:
+            habitData.habitType === "Good"
+              ? "/badge-good.png"
+              : "/badge-bad.png",
         });
         removeFromDB(reminderId); // Remove from DB once triggered
       }, delay);

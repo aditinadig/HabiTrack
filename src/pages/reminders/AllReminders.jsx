@@ -21,6 +21,7 @@ import {
 import { FaTrash, FaEdit } from "react-icons/fa";
 import { MdNotificationsActive } from "react-icons/md";
 import SetReminderForm from "./SetReminderForm";
+import { getHabitById } from "../../services/habitService";
 
 const AllReminders = ({ habitId }) => {
   const [reminders, setReminders] = useState([]);
@@ -28,27 +29,60 @@ const AllReminders = ({ habitId }) => {
   const [error, setError] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedReminder, setSelectedReminder] = useState(null);
+  const [habitData, setHabitData] = useState({});
 
   // Check if a reminder is in the past
   const isReminderCompleted = (reminder) => {
+    // If the frequency is not "once", do not mark as completed
     if (reminder.frequency !== "once") {
-      // If the frequency is not "once", do not mark as completed
       return false;
     }
 
+    // Parse the notificationTime field into a Date object
+    const reminderTime = new Date(reminder.notificationTime);
+
+    // Get the current time
     const now = new Date();
-    const [hours, minutes] = reminder.timePreference.split(":").map(Number);
 
-    const reminderTime = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      hours,
-      minutes,
-      0
-    );
-
+    // Compare if the reminder time is in the past
     return reminderTime <= now;
+  };
+
+  const formatNotificationTime = (notificationTime) => {
+    const date = new Date(notificationTime);
+
+    // Format options: Customize as needed
+    const options = {
+      weekday: "long", // Display the day of the week
+      year: "numeric",
+      month: "long", // Full month name
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true, // Use 12-hour clock (set to false for 24-hour format)
+    };
+
+    // Create a formatter using the user's locale
+    return new Intl.DateTimeFormat("en-US", options).format(date);
+  };
+
+  const formatTimePreference = (timePreference) => {
+    const [hours, minutes] = timePreference.split(":").map(Number);
+
+    // Create a new Date object with today's date and the given time
+    const date = new Date();
+    date.setHours(hours, minutes);
+
+    // Format options for user-readable time
+    const options = {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true, // Use 12-hour clock with AM/PM
+    };
+
+    // Format time using Intl.DateTimeFormat
+    return new Intl.DateTimeFormat("en-US", options).format(date);
   };
 
   useEffect(() => {
@@ -75,6 +109,18 @@ const AllReminders = ({ habitId }) => {
     if (habitId) fetchReminders();
   }, [habitId, openEditModal]);
 
+  useEffect(() => {
+    if (habitId) {
+      getHabitById(habitId)
+        .then((habit) => {
+          setHabitData(habit);
+        })
+        .catch((err) => {
+          console.error("Error fetching habit data:", err);
+        });
+    }
+  }, [habitId]);
+
   const handleDeleteReminder = async (reminderId) => {
     try {
       if ("serviceWorker" in navigator) {
@@ -82,6 +128,7 @@ const AllReminders = ({ habitId }) => {
         registration.active.postMessage({
           type: "DELETE_NOTIFICATION",
           reminderId,
+          habitData,
         });
       }
       await deleteReminder(reminderId);
@@ -211,20 +258,12 @@ const AllReminders = ({ habitId }) => {
                             color: completed ? "gray" : "var(--color-text)",
                           }}
                         >
-                          Notification:{" "}
-                          {reminder.notificationType.toUpperCase()}
-                        </Typography>
-                        <br />
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          sx={{ color: "gray" }}
-                        >
                           Frequency: {reminder.frequency.toUpperCase()}
                         </Typography>
+                        <br />
+
                         {reminder.customDays && (
                           <>
-                            <br />
                             <Typography
                               component="span"
                               variant="body2"
@@ -261,15 +300,10 @@ const AllReminders = ({ habitId }) => {
                               : "var(--color-secondary-text)",
                           }}
                         >
-                          Time: {reminder.timePreference}
-                        </Typography>
-                        <br />
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          sx={{ color: "gray" }}
-                        >
-                          Enabled: {reminder.enabled ? "Yes" : "No"}
+                          Time:{" "}
+                          {reminder.notificationTime
+                            ? formatNotificationTime(reminder.notificationTime)
+                            : formatTimePreference(reminder.timePreference)}
                         </Typography>
                       </>
                     }

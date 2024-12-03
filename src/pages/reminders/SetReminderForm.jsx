@@ -40,7 +40,7 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
   const [notificationType, setNotificationType] = useState(
     reminder?.notificationType || "sound"
   );
-  const [frequency, setFrequency] = useState(reminder?.frequency || "daily");
+  const [frequency, setFrequency] = useState(reminder?.frequency || "once");
   const [customDays, setCustomDays] = useState(reminder?.customDays || []);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -131,6 +131,7 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
       registration.active.postMessage({
         type: "SCHEDULE_NOTIFICATION",
         reminderData,
+        habitData,
       });
     }
   };
@@ -156,14 +157,16 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
     };
 
     try {
-      if (reminder?.id) {
-        await updateReminder(reminder.id, reminderData);
-        returnedReminderId = reminder.id;
-      } else {
-        returnedReminderId = await addReminder(reminderData);
+      if (reminderData.frequency !== "once") {
+        reminderData.notificationTime = null;
+        if (reminder?.id) {
+          await updateReminder(reminder.id, reminderData);
+          returnedReminderId = reminder.id;
+        } else {
+          returnedReminderId = await addReminder(reminderData);
+        }
+        reminderData.id = returnedReminderId;        
       }
-
-      reminderData.id = returnedReminderId;
 
       if (enabled) {
         const currentDate = new Date();
@@ -279,6 +282,17 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
                 "0"
               )}`;
 
+              if (reminderData.frequency === "once") {
+                reminderData.notificationTime = notificationTime;
+                if (reminder?.id) {
+                  await updateReminder(reminder.id, reminderData);
+                  returnedReminderId = reminder.id;
+                } else {
+                  returnedReminderId = await addReminder(reminderData);
+                }
+                reminderData.id = returnedReminderId;
+              }
+
               await scheduleNotification({
                 ...reminderData,
                 notificationTime,
@@ -291,7 +305,6 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
                   timeStyle: "short",
                 }).format(date)
               );
-
             } catch (err) {
               console.error(
                 "Error scheduling notification for date:",
@@ -310,9 +323,7 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
         toast.success(`Reminders set for: ${userFriendlyDates.join(", ")}`, {
           autoClose: 5000,
         });
-
       }
-
 
       if (onClose) onClose();
     } catch (err) {
