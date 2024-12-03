@@ -16,9 +16,21 @@ import {
   FormGroup,
 } from "@mui/material";
 import { addReminder, updateReminder } from "../../services/reminderService";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getHabitById } from "../../services/habitService";
+
+// Helper to register the service worker
+const registerServiceWorker = async () => {
+  if ("serviceWorker" in navigator) {
+    try {
+      await navigator.serviceWorker.register("/sw.js");
+      console.log("Service Worker Registered");
+    } catch (error) {
+      console.error("Service Worker Registration Failed:", error);
+    }
+  }
+};
 
 const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
   const [enabled, setEnabled] = useState(reminder?.enabled || true);
@@ -33,6 +45,7 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [habitData, setHabitData] = useState(null);
+  const [scheduledReminders, setScheduledReminders] = useState([]);
 
   const daysOfWeek = [
     { label: "Sunday", value: 0 },
@@ -59,13 +72,17 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
       getHabitById(habitId)
         .then((habit) => {
           setHabitData(habit);
-          console.log("Habit Data:", habit);
         })
         .catch((err) => {
           console.error("Error fetching habit data:", err);
         });
     }
   }, [habitId]);
+
+  useEffect(() => {
+    requestNotificationPermission();
+    registerServiceWorker(); // Register the service worker on load
+  }, []);
 
   const handleDayToggle = (day) => {
     if (customDays.includes(day)) {
@@ -105,70 +122,26 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
     oscillator.stop(audioContext.currentTime + 0.5); // Play for 0.5 seconds
   };
 
-  const scheduleNotification = (time, habitData, sound) => {
-    let scheduledTime = new Date(time);
+  // Schedule notification using the service worker
+  const scheduleNotification = async (reminderData) => {
+    if ("serviceWorker" in navigator && "Notification" in window) {
+      const registration = await navigator.serviceWorker.ready;
 
-    // Check if the given time is in the past
-    if (scheduledTime.getTime() <= Date.now()) {
-      // If the time is in the past, set the reminder for the same time on the next day
-      scheduledTime.setDate(scheduledTime.getDate() + 1);
+      // Send the reminder data to the service worker
+      registration.active.postMessage({
+        type: "SCHEDULE_NOTIFICATION",
+        reminderData,
+      });
     }
-
-    const delay = scheduledTime.getTime() - Date.now();
-
-    // Notify user that the reminder is being scheduled
-    const reminderTime = scheduledTime.toLocaleString(); // Format the reminder time
-    toast.info(`Scheduling reminder for ${reminderTime}`, {
-      autoClose: 5000,
-      closeOnClick: true,
-      className: "custom-toast",
-    });
-
-    setTimeout(() => {
-      if (!("Notification" in window)) {
-        console.error("This browser does not support desktop notifications.");
-        toast.error("Your browser does not support notifications.");
-        return;
-      }
-
-      if (Notification.permission !== "granted") {
-        Notification.requestPermission().then((permission) => {
-          if (permission !== "granted") {
-            console.error("Please allow notifications to enable reminders.");
-            toast.error(
-              "Notification permission denied. Please enable notifications."
-            );
-            return;
-          }
-        });
-      }
-
-      if (Notification.permission === "granted") {
-        const habitMessage =
-          habitData.type === "good"
-            ? `You're doing great! It's time to work on your habit: "${habitData.habitName}".`
-            : `Time to check yourself! Avoid your habit: "${habitData.habitName}".`;
-
-        new Notification("Habit Reminder", {
-          body: habitMessage,
-        });
-
-        toast.success(habitMessage, {
-          autoClose: false,
-          closeOnClick: true,
-        });
-
-        if (sound) {
-          playNotificationSound();
-        }
-      }
-    }, delay);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let returnedReminderId = "";
+
     if (!timePreference) {
-      console.error("Time preference is required.");
+      toast.error("Time preference is required.");
       return;
     }
 
@@ -185,24 +158,166 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
     try {
       if (reminder?.id) {
         await updateReminder(reminder.id, reminderData);
+        returnedReminderId = reminder.id;
       } else {
-        await addReminder(reminderData);
+        returnedReminderId = await addReminder(reminderData);
       }
+
+      reminderData.id = returnedReminderId;
 
       if (enabled) {
-        const notificationTime = `${
-          new Date().toISOString().split("T")[0]
-        }T${timePreference}:00`;
+        const currentDate = new Date();
+        const [hours, minutes] = timePreference.split(":").map(Number);
 
-        scheduleNotification(notificationTime, habitData, notificationType);
-        console.log("notificationType", notificationType);
+        const scheduleDates = []; // Store notification dates
+        const userFriendlyDates = []; // Store human-readable dates for the user
+
+        // Helper function to adjust past dates
+        const adjustPastDate = (date) => {
+          if (date <= currentDate) {
+            date.setDate(date.getDate() + 1); // Move to the next day
+          }
+          return date;
+        };
+
+        switch (frequency) {
+          case "daily":
+            for (let i = 0; i < 7; i++) {
+              const notificationDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                currentDate.getDate() + i,
+                hours,
+                minutes,
+                0
+              );
+              scheduleDates.push(adjustPastDate(notificationDate));
+            }
+            break;
+
+          case "weekdays":
+            for (let i = 0; i < 7; i++) {
+              const notificationDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                currentDate.getDate() + i,
+                hours,
+                minutes,
+                0
+              );
+              if (
+                notificationDate.getDay() >= 1 &&
+                notificationDate.getDay() <= 5
+              ) {
+                scheduleDates.push(adjustPastDate(notificationDate));
+              }
+            }
+            break;
+
+          case "weekends":
+            for (let i = 0; i < 7; i++) {
+              const notificationDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                currentDate.getDate() + i,
+                hours,
+                minutes,
+                0
+              );
+              if (
+                notificationDate.getDay() === 0 ||
+                notificationDate.getDay() === 6
+              ) {
+                scheduleDates.push(adjustPastDate(notificationDate));
+              }
+            }
+            break;
+
+          case "custom":
+            customDays.forEach((day) => {
+              for (let i = 0; i < 7; i++) {
+                const notificationDate = new Date(
+                  currentDate.getFullYear(),
+                  currentDate.getMonth(),
+                  currentDate.getDate() + i,
+                  hours,
+                  minutes,
+                  0
+                );
+                if (notificationDate.getDay() === day) {
+                  scheduleDates.push(adjustPastDate(notificationDate));
+                }
+              }
+            });
+            break;
+
+          case "once":
+          default:
+            const notificationDate = new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth(),
+              currentDate.getDate(),
+              hours,
+              minutes,
+              0
+            );
+            scheduleDates.push(adjustPastDate(notificationDate));
+        }
+
+        await Promise.all(
+          scheduleDates.map(async (date) => {
+            try {
+              const notificationTime = `${date.getFullYear()}-${String(
+                date.getMonth() + 1
+              ).padStart(2, "0")}-${String(date.getDate()).padStart(
+                2,
+                "0"
+              )}T${String(date.getHours()).padStart(2, "0")}:${String(
+                date.getMinutes()
+              ).padStart(2, "0")}:${String(date.getSeconds()).padStart(
+                2,
+                "0"
+              )}`;
+
+              await scheduleNotification({
+                ...reminderData,
+                notificationTime,
+              });
+
+              // Add human-readable time to user-friendly dates
+              userFriendlyDates.push(
+                new Intl.DateTimeFormat("en-US", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(date)
+              );
+
+            } catch (err) {
+              console.error(
+                "Error scheduling notification for date:",
+                date,
+                err
+              );
+            }
+          })
+        );
+
+        // Update state with user-friendly dates
+        setScheduledReminders(userFriendlyDates);
+
+        // Use local variable instead of state
+        alert(`Reminders set for: ${userFriendlyDates.join(", ")}`);
+        toast.success(`Reminders set for: ${userFriendlyDates.join(", ")}`, {
+          autoClose: 5000,
+        });
+
       }
 
-      console.log("Reminder saved successfully!");
+
       if (onClose) onClose();
     } catch (err) {
       console.error("Error saving reminder:", err);
-      console.error("Failed to save the reminder. Please try again.");
+      toast.error("Failed to save the reminder. Please try again.");
     }
   };
   // Request Notification Permission on Form Load
@@ -210,8 +325,18 @@ const SetReminderForm = ({ reminder, habitId, userId, onClose }) => {
     requestNotificationPermission();
   }, []);
 
+  useEffect(() => {
+    const notifications =
+      JSON.parse(localStorage.getItem("notifications")) || [];
+    notifications.forEach((notification) => {
+      toast(notification.message, { type: notification.type });
+    });
+    localStorage.removeItem("notifications"); // Clear notifications after showing
+  }, []);
+
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
+      <ToastContainer />
       <Paper
         elevation={3}
         sx={{

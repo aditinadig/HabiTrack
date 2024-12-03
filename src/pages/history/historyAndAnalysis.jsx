@@ -341,7 +341,7 @@ const HistoryAndAnalysis = () => {
             <Typography variant="h5" sx={{ mb: 2 }}>
               Streak Tracker
             </Typography>
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" minHeight={400}>
               <BarChart data={streakData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />

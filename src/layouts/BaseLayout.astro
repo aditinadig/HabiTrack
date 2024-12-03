@@ -1,7 +1,5 @@
 ---
-import React from 'react';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React from "react";
 import "../styles/global.css";
 ---
 
@@ -9,11 +7,16 @@ import "../styles/global.css";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").then(() => {
+          console.log("Service Worker Registered");
+        });
+      }
+    </script>
     <title>HabiTrack</title>
   </head>
   <body>
-    <!-- Ensure ToastContainer is hydrated -->
-    <ToastContainer position="top-right" autoClose={5000} client:load  />
     <slot />
   </body>
 </html>

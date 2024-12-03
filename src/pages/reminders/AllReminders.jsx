@@ -29,12 +29,41 @@ const AllReminders = ({ habitId }) => {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedReminder, setSelectedReminder] = useState(null);
 
+  // Check if a reminder is in the past
+  const isReminderCompleted = (reminder) => {
+    if (reminder.frequency !== "once") {
+      // If the frequency is not "once", do not mark as completed
+      return false;
+    }
+
+    const now = new Date();
+    const [hours, minutes] = reminder.timePreference.split(":").map(Number);
+
+    const reminderTime = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      hours,
+      minutes,
+      0
+    );
+
+    return reminderTime <= now;
+  };
+
   useEffect(() => {
     const fetchReminders = async () => {
       setLoading(true);
       try {
         const fetchedReminders = await getRemindersByHabit(habitId);
-        setReminders(fetchedReminders);
+
+        // Optional: Mark reminders as completed in the database if they are past
+        const updatedReminders = fetchedReminders.map((reminder) => ({
+          ...reminder,
+          completed: isReminderCompleted(reminder),
+        }));
+
+        setReminders(updatedReminders);
       } catch (err) {
         console.error("Error fetching reminders:", err);
         setError("Failed to fetch reminders. Please try again later.");
@@ -48,7 +77,15 @@ const AllReminders = ({ habitId }) => {
 
   const handleDeleteReminder = async (reminderId) => {
     try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        registration.active.postMessage({
+          type: "DELETE_NOTIFICATION",
+          reminderId,
+        });
+      }
       await deleteReminder(reminderId);
+      alert("Reminder deleted successfully.");
       setReminders((prevReminders) =>
         prevReminders.filter((reminder) => reminder.id !== reminderId)
       );
@@ -119,7 +156,6 @@ const AllReminders = ({ habitId }) => {
 
   return (
     <>
-      
       <Paper
         elevation={3}
         sx={{
@@ -145,122 +181,147 @@ const AllReminders = ({ habitId }) => {
           <MdNotificationsActive size={24} /> All Reminders
         </Typography>
         <List>
-          {reminders.map((reminder, index) => (
-            <Box key={reminder.id}>
-              <ListItem
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                  backgroundColor: "#FFF",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                  p: 2,
-                }}
-              >
-                <ListItemText
-                  primary={
-                    <>
-                      <Typography
-                        component="div"
-                        variant="body1"
-                        sx={{ fontWeight: 600, color: "var(--color-text)" }}
-                      >
-                        Notification: {reminder.notificationType.toUpperCase()}
-                      </Typography>
-                      <Typography
-                        component="div"
-                        variant="body2"
-                        sx={{ color: "gray" }}
-                      >
-                        Frequency: {reminder.frequency.toUpperCase()}
-                      </Typography>
-                      {reminder.customDays && (
+          {reminders.map((reminder, index) => {
+            const completed = isReminderCompleted(reminder);
+
+            return (
+              <Box key={reminder.id}>
+                <ListItem
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2,
+                    backgroundColor: completed ? "#f5f5f5" : "#FFF",
+                    borderRadius: "8px",
+                    boxShadow: completed
+                      ? "none"
+                      : "0 2px 8px rgba(0, 0, 0, 0.1)",
+                    p: 2,
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <>
                         <Typography
-                          component="div"
+                          component="span"
+                          variant="body1"
+                          sx={{
+                            fontWeight: 600,
+                            color: completed ? "gray" : "var(--color-text)",
+                          }}
+                        >
+                          Notification:{" "}
+                          {reminder.notificationType.toUpperCase()}
+                        </Typography>
+                        <br />
+                        <Typography
+                          component="span"
                           variant="body2"
                           sx={{ color: "gray" }}
                         >
-                          Custom Days:{" "}
-                          {reminder.customDays
-                            .map(
-                              (day) =>
-                                [
-                                  "Sunday",
-                                  "Monday",
-                                  "Tuesday",
-                                  "Wednesday",
-                                  "Thursday",
-                                  "Friday",
-                                  "Saturday",
-                                ][day]
-                            )
-                            .join(", ")}
+                          Frequency: {reminder.frequency.toUpperCase()}
                         </Typography>
-                      )}
-                    </>
-                  }
-                  secondary={
-                    <>
-                      <Typography
-                        component="div"
-                        variant="body2"
-                        sx={{ color: "var(--color-secondary-text)" }}
+                        {reminder.customDays && (
+                          <>
+                            <br />
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              sx={{ color: "gray" }}
+                            >
+                              Custom Days:{" "}
+                              {reminder.customDays
+                                .map(
+                                  (day) =>
+                                    [
+                                      "Sunday",
+                                      "Monday",
+                                      "Tuesday",
+                                      "Wednesday",
+                                      "Thursday",
+                                      "Friday",
+                                      "Saturday",
+                                    ][day]
+                                )
+                                .join(", ")}
+                            </Typography>
+                          </>
+                        )}
+                      </>
+                    }
+                    secondary={
+                      <>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          sx={{
+                            color: completed
+                              ? "gray"
+                              : "var(--color-secondary-text)",
+                          }}
+                        >
+                          Time: {reminder.timePreference}
+                        </Typography>
+                        <br />
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          sx={{ color: "gray" }}
+                        >
+                          Enabled: {reminder.enabled ? "Yes" : "No"}
+                        </Typography>
+                      </>
+                    }
+                  />
+                  {!completed && (
+                    <Box>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => handleEditClick(reminder)}
+                        sx={{
+                          backgroundColor: "rgba(63, 81, 181, 0.1)",
+                          "&:hover": {
+                            backgroundColor: "rgba(63, 81, 181, 0.2)",
+                          },
+                          mr: 1,
+                        }}
                       >
-                        Time: {reminder.timePreference}
-                      </Typography>
-                      <Typography
-                        component="div"
-                        variant="body2"
-                        sx={{ color: "gray" }}
+                        <FaEdit />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteReminder(reminder.id)}
+                        sx={{
+                          backgroundColor: "rgba(255, 0, 0, 0.1)",
+                          "&:hover": {
+                            backgroundColor: "rgba(255, 0, 0, 0.2)",
+                          },
+                        }}
                       >
-                        Enabled: {reminder.enabled ? "Yes" : "No"}
-                      </Typography>
-                    </>
-                  }
-                />
-                <Box>
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => handleEditClick(reminder)}
-                    sx={{
-                      backgroundColor: "rgba(63, 81, 181, 0.1)",
-                      "&:hover": {
-                        backgroundColor: "rgba(63, 81, 181, 0.2)",
-                      },
-                      mr: 1,
-                    }}
-                  >
-                    <FaEdit />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleDeleteReminder(reminder.id)}
-                    sx={{
-                      backgroundColor: "rgba(255, 0, 0, 0.1)",
-                      "&:hover": {
-                        backgroundColor: "rgba(255, 0, 0, 0.2)",
-                      },
-                    }}
-                  >
-                    <FaTrash />
-                  </IconButton>
-                </Box>
-              </ListItem>
-              {index < reminders.length - 1 && <Divider />}
-            </Box>
-          ))}
+                        <FaTrash />
+                      </IconButton>
+                    </Box>
+                  )}
+                </ListItem>
+                {index < reminders.length - 1 && <Divider />}
+              </Box>
+            );
+          })}
         </List>
       </Paper>
 
-      {/* Edit Reminder Modal */}
       <Modal
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center", overflowY: "scroll" }}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflowY: "scroll",
+        }}
       >
         <Box
           sx={{

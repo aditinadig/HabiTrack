@@ -27,6 +27,7 @@ import { BAD_HABIT_ALTERNATIVES } from "../../services/habitData";
 import { getEntriesByHabit } from "../../services/habitEntriesService";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import NewHabitForm from "./NewHabitForm";
 
 dayjs.extend(isBetween);
 
@@ -86,6 +87,7 @@ const AllHabits = () => {
   const [totalHabits, setTotalHabits] = useState(0);
   const [loading, setLoading] = useState(true);
   const [openAllReminders, setOpenAllReminders] = useState(false);
+  const [openCreateHabit, setOpenCreateHabit] = useState(false);
 
   useEffect(() => {
     const fetchHabits = async () => {
@@ -119,7 +121,7 @@ const AllHabits = () => {
     };
 
     fetchHabits();
-  }, []);
+  }, [openCreateHabit]);
 
   useEffect(() => {
     applyFilters();
@@ -270,6 +272,14 @@ const AllHabits = () => {
     window.location.href = "/track-habit";
   };
 
+  const handleOpenCreateHabitModal = () => {
+    setOpenCreateHabit(true);
+  };
+
+  const handleCloseCreateHabitModal = () => {
+    setOpenCreateHabit(false);
+  };
+
   return (
     <Box sx={{ cursor: loading ? "wait" : "auto" }}>
       <Header />
@@ -325,7 +335,8 @@ const AllHabits = () => {
           <Button
             variant="contained"
             color="warning"
-            href="/create-habit"
+            onClick={handleOpenCreateHabitModal}
+            // href="/create-habit"
             sx={{ height: "2.5rem" }}
           >
             Add New Habit
@@ -590,6 +601,25 @@ const AllHabits = () => {
         >
           <Box sx={{ maxWidth: "1000px", margin: "auto", mb: 2, mt: 4 }}>
             <AllReminders habitId={selectedHabitId} />
+          </Box>
+        </Modal>
+
+        <Modal
+          open={openCreateHabit}
+          onClose={handleCloseCreateHabitModal}
+          sx={{ overflowY: "scroll" }}
+        >
+          <Box
+            sx={{
+              maxWidth: "700px",
+              margin: "auto",
+              mt: 2,
+              mb: 2,
+              p: 2,
+              borderRadius: "8px",
+            }}
+          >
+            <NewHabitForm handleCloseCreateHabitModal={ () => handleCloseCreateHabitModal()} />
           </Box>
         </Modal>
       </Box>

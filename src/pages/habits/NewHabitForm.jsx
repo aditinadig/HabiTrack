@@ -10,7 +10,7 @@ import ReminderForm from "../reminders/SetReminderForm";
 import "../../styles/global.css";
 import { BAD_HABIT_ALTERNATIVES } from "../../services/habitData"; // Import suggestions and alternatives
 
-const NewHabitForm = () => {
+const NewHabitForm = ({handleCloseCreateHabitModal}) => {
   const [habitData, setHabitData] = useState({
     habitName: "",
     habitType: "Good",
@@ -38,6 +38,18 @@ const NewHabitForm = () => {
   const handleCloseReminder = () => {
     setOpenReminderModal(false);
     setSelectedHabitId(null);
+    setHabitData({
+      habitName: "",
+      habitType: "Good",
+      trigger: "",
+      reaction: "",
+      reward: "",
+      rewardType: "",
+      frequency: "Daily",
+    });
+    if (handleCloseCreateHabitModal) {
+      handleCloseCreateHabitModal();
+    }
   };
 
   const handleChange = (event) => {
@@ -80,11 +92,8 @@ const NewHabitForm = () => {
 
   return (
     <Box>
-      <Header />
       <Box sx={{ textAlign: "center" }}>
-        <Button variant="link" href="/all-habits" sx={{ mt: 4 }}>
-          Go Back
-        </Button>
+
         <HabitForm
           title="Create a New Habit"
           habitData={habitData}
@@ -92,8 +101,24 @@ const NewHabitForm = () => {
           handleSubmit={handleSubmit}
           buttonText="Add"
         />
-        <Modal open={openReminderModal} onClose={handleCloseReminder}>
-          <Box sx={{ maxWidth: "500px", margin: "auto", mt: 4, p: 2 }}>
+        <Modal
+          open={openReminderModal}
+          onClose={handleCloseReminder}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflowY: "scroll",
+          }}
+        >
+          <Box
+            sx={{
+              maxWidth: "500px",
+              margin: "auto",
+              p: 2,
+              overflowY: "scroll",
+            }}
+          >
             <ReminderForm
               habitId={selectedHabitId}
               userId={userId}
@@ -103,7 +128,6 @@ const NewHabitForm = () => {
         </Modal>
       </Box>
 
-      <Footer />
     </Box>
   );
 };
