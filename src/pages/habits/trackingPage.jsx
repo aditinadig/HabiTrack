@@ -397,7 +397,7 @@ const TrackingPage = () => {
                               height: "36px",
                               lineHeight: "36px",
                               borderRadius: "50%",
-                              backgroundColor: "#4CAF50",
+                              backgroundColor: habit.habitType === 'Good' ? "#4CAF50" : "#F44336",
                               color: "white",
                               display: "flex",
                               justifyContent: "center",
@@ -407,7 +407,7 @@ const TrackingPage = () => {
                               boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
                               transition: "all 0.3s ease",
                               "&:hover": {
-                                backgroundColor: "#388E3C",
+                                backgroundColor: habit.habitType === 'Good' ? "#388E3C" : "#D32F2F",
                               },
                             }}
                             onClick={() =>
